@@ -3,6 +3,7 @@ package functest
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
 	"os"
 	"strings"
 	"testing"
@@ -54,15 +55,21 @@ func TestBus_Consume(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, bus)
 
-	var consumedEvent natsbus.Event
+	var consumedEvent *natsbus.ConsumedEvent
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	bus.Subscribe(&natsbus.EventSubscriber{
 		Event: UserEvent{},
-		Subscriber: func(event natsbus.Event) error {
+		Subscriber: func(event *natsbus.ConsumedEvent) error {
 			consumedEvent = event
+
+			slog.
+				With(slog.String("timestamp", event.Timestamp.Format(time.DateTime))).
+				With(slog.String("id", event.ID)).
+				Debug("consumed test event")
+
 			cancel()
 
 			return nil
@@ -83,5 +90,5 @@ func TestBus_Consume(t *testing.T) {
 	assert.Equal(t, &UserEvent{
 		FirstName: "ab",
 		LastName:  "cd",
-	}, consumedEvent)
+	}, consumedEvent.Event)
 }

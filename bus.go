@@ -97,7 +97,7 @@ func (b *NatsBus) Subscribe(subscriber *EventSubscriber) {
 }
 
 func (b *NatsBus) Close() error {
-	slog.Info("[event-bus] closing")
+	slog.Info("[nats-bus] closing")
 
 	for _, c := range b.consumers {
 		if c.consumerContext != nil {
@@ -109,7 +109,7 @@ func (b *NatsBus) Close() error {
 }
 
 func (b *NatsBus) Consume(ctx context.Context) error {
-	slog.DebugContext(ctx, "[event-bus] start consuming")
+	slog.DebugContext(ctx, "[nats-bus] start consuming")
 
 	for _, cons := range b.consumers {
 		if cons.stream == nil {
@@ -153,14 +153,14 @@ func (b *NatsBus) Consume(ctx context.Context) error {
 
 				slog.
 					With(slog.String("err", err.Error())).
-					ErrorContext(ctx, "[event-bus] failed to consume message")
+					ErrorContext(ctx, "[nats-bus] failed to consume message")
 
 				return
 			}
 
 			slog.
 				With(slog.String("topic_name", c.stream.topic)).
-				InfoContext(ctx, "[event-bus] consumer started")
+				InfoContext(ctx, "[nats-bus] consumer started")
 
 			c.consumerContext = consCtx
 
@@ -171,7 +171,7 @@ func (b *NatsBus) Consume(ctx context.Context) error {
 
 					slog.
 						With(slog.String("topic_name", c.stream.topic)).
-						InfoContext(ctx, "[event-bus] stopping consumer")
+						InfoContext(ctx, "[nats-bus] stopping consumer")
 
 					c.consumerContext.Stop()
 

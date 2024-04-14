@@ -92,7 +92,7 @@ func main() {
     
     bus.Subscribe(&natsbus.EventSubscriber{
         Event: &TestEvent{},
-        Subscriber: func(event Event) error {
+        Subscriber: func(event *natsbus.ConsumedEvent) error {
             fmt.Println(event)
             return nil
         },

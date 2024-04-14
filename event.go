@@ -2,6 +2,7 @@ package natsbus
 
 import (
 	"context"
+	"time"
 )
 
 type Bus interface {
@@ -18,6 +19,12 @@ type Event interface {
 
 type EventSubscriber struct {
 	Event       Event
-	Subscriber  func(event Event) error
+	Subscriber  func(event *ConsumedEvent) error
 	MaxAttempts *int
+}
+
+type ConsumedEvent struct {
+	Event     Event
+	ID        string
+	Timestamp time.Time
 }

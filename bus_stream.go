@@ -23,7 +23,7 @@ func (b *NatsBus) persistStream(ctx context.Context, stream *natsStream) error {
 	slog.
 		With(slog.Any("topic_name", stream.topic)).
 		With(slog.String("stream_name", stream.name)).
-		DebugContext(ctx, "[event-bus] stream persisted")
+		DebugContext(ctx, "[nats-bus] stream persisted")
 
 	stream.stream = st
 
