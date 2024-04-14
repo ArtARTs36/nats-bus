@@ -1,0 +1,55 @@
+services:
+  nats-bus-functests:
+    image: golang:1.21-alpine
+    volumes:
+      - ./:/app
+    working_dir: /app
+    command:
+      - go
+      - test
+      - ./functest
+      - -v
+    networks:
+      - test-network
+
+  nats1:
+    image: docker.io/nats:2.10.14-alpine
+    command:
+      - "--name=nats1"
+      - "--cluster_name=c1"
+      - "--cluster=nats://nats1:6222"
+      - "--routes=nats-route://nats1:6222,nats-route://nats2:6222,nats-route://nats3:6222"
+      - "--http_port=8222"
+      - "--js"
+      - "--sd=/data"
+    networks:
+      - test-network
+
+  nats2:
+    image: docker.io/nats:2.10.14-alpine
+    command:
+      - "--name=nats2"
+      - "--cluster_name=c1"
+      - "--cluster=nats://nats2:6222"
+      - "--routes=nats-route://nats1:6222,nats-route://nats2:6222,nats-route://nats3:6222"
+      - "--http_port=8222"
+      - "--js"
+      - "--sd=/data"
+    networks:
+      - test-network
+
+  nats3:
+    image: docker.io/nats:2.10.14-alpine
+    command:
+      - "--name=nats3"
+      - "--cluster_name=c1"
+      - "--cluster=nats://nats3:6222"
+      - "--routes=nats-route://nats1:6222,nats-route://nats2:6222,nats-route://nats3:6222"
+      - "--http_port=8222"
+      - "--js"
+      - "--sd=/data"
+    networks:
+      - test-network
+
+networks:
+  test-network:
