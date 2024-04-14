@@ -76,7 +76,7 @@ func TestBus_Consume(t *testing.T) {
 		},
 	})
 
-	err = bus.Publish(ctx, &UserEvent{
+	_, err = bus.Publish(ctx, &UserEvent{
 		FirstName: "ab",
 		LastName:  "cd",
 	})

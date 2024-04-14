@@ -6,7 +6,7 @@ import (
 )
 
 type Bus interface {
-	Publish(ctx context.Context, event Event) error
+	Publish(ctx context.Context, event Event) (*ProducedEvent, error)
 	Subscribe(subscriber *EventSubscriber)
 	Consume(ctx context.Context) error
 	Close() error
@@ -27,4 +27,8 @@ type ConsumedEvent struct {
 	Event     Event
 	ID        string
 	Timestamp time.Time
+}
+
+type ProducedEvent struct {
+	ID string
 }

@@ -48,40 +48,47 @@ type Config struct {
 	AutoCreateStreamPublish bool          `env:"AUTO_CREATE_STREAM_ON_PUBLISH"`
 }
 
-func (b *NatsBus) Publish(ctx context.Context, event Event) error {
+func (b *NatsBus) Publish(ctx context.Context, event Event) (*ProducedEvent, error) {
 	data, err := json.Marshal(event)
 	if err != nil {
-		return fmt.Errorf("failed to marshal Event to json: %w", err)
+		return nil, fmt.Errorf("failed to marshal Event to json: %w", err)
 	}
 
+	id := generateMessageID()
+
 	msg := oNats.NewMsg(event.TopicName())
-	msg.Header.Set(messageHeaderMessageID, generateMessageID())
+	msg.Header.Set(messageHeaderMessageID, id)
 	msg.Data = data
+
+	prEvent := &ProducedEvent{
+		ID: id,
+	}
 
 	_, err = b.jetStream.PublishMsg(ctx, msg)
 	if err == nil {
-		return nil
+		return prEvent, nil
 	}
 
 	if !b.cfg.AutoCreateStreamPublish && !errors.Is(err, jetstream.ErrNoStreamResponse) {
-		return err
+		return nil, err
 	}
 
 	st := b.retrieveStream(event.TopicName())
 	if st.stream == nil {
 		twoErr := b.persistStream(ctx, st)
 		if twoErr != nil {
-			return errors.Join(err, twoErr)
+			return nil, errors.Join(err, twoErr)
 		}
 
 		_, twoErr = b.jetStream.PublishMsg(ctx, msg)
 		if twoErr != nil {
-			return errors.Join(err, twoErr)
+			return nil, errors.Join(err, twoErr)
 		}
-		err = nil
+
+		return prEvent, nil
 	}
 
-	return err
+	return nil, err
 }
 
 func (b *NatsBus) Subscribe(subscriber *EventSubscriber) {

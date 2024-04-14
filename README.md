@@ -61,7 +61,7 @@ func main() {
 		log.Fatalln("failed to connect to nats", err.Error())
 	}
 
-	err = bus.Publish(context.Background(), &TestEvent{})
+	_, err = bus.Publish(context.Background(), &TestEvent{})
 	if err != nil {
 		log.Fatalln("failed to connect to nats", err.Error())
 	}
@@ -91,7 +91,7 @@ func main() {
     }
     
     bus.Subscribe(&natsbus.EventSubscriber{
-        Event: &TestEvent{},
+        Event: TestEvent{},
         Subscriber: func(event *natsbus.ConsumedEvent) error {
             fmt.Println(event)
             return nil
