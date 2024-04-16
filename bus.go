@@ -119,7 +119,7 @@ func (b *NatsBus) Consume(ctx context.Context) error {
 	slog.DebugContext(ctx, "[nats-bus] start consuming")
 
 	for _, cons := range b.consumers {
-		if cons.stream == nil {
+		if cons.stream.stream == nil {
 			err := b.persistStream(ctx, cons.stream)
 			if err != nil {
 				return err
@@ -139,7 +139,7 @@ func (b *NatsBus) Consume(ctx context.Context) error {
 		)
 		cancel()
 		if err != nil {
-			return fmt.Errorf("failed to create consumer for consumer %q: %w", cons.name, err)
+			return fmt.Errorf("failed to create consumer for stream %q: %w", cons.name, err)
 		}
 
 		cons.consumer = consumer

@@ -9,6 +9,11 @@ import (
 )
 
 func (b *NatsBus) persistStream(ctx context.Context, stream *natsStream) error {
+	slog.
+		With(slog.Any("topic_name", stream.topic)).
+		With(slog.String("stream_name", stream.name)).
+		DebugContext(ctx, "[nats-bus] persisting stream")
+
 	createStreamCtx, cancel := context.WithTimeout(ctx, b.cfg.CreateStreamTimeout)
 	defer cancel()
 
@@ -23,7 +28,7 @@ func (b *NatsBus) persistStream(ctx context.Context, stream *natsStream) error {
 	slog.
 		With(slog.Any("topic_name", stream.topic)).
 		With(slog.String("stream_name", stream.name)).
-		DebugContext(ctx, "[nats-bus] stream persisted")
+		InfoContext(ctx, "[nats-bus] stream persisted")
 
 	stream.stream = st
 
