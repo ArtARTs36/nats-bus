@@ -92,8 +92,6 @@ func (b *NatsBus) Publish(ctx context.Context, event Event) (*ProducedEvent, err
 }
 
 func (b *NatsBus) Subscribe(subscriber *EventSubscriber) {
-	fillSubscriber(subscriber)
-
 	st := b.retrieveStream(subscriber.Event.TopicName())
 
 	b.consumers = append(b.consumers, &streamConsumer{
@@ -131,11 +129,7 @@ func (b *NatsBus) Consume(ctx context.Context) error {
 		consumer, err := b.jetStream.CreateOrUpdateConsumer(
 			createConsumerCtx,
 			cons.stream.name,
-			jetstream.ConsumerConfig{
-				Durable:       cons.name,
-				DeliverPolicy: jetstream.DeliverLastPolicy,
-				MaxDeliver:    *cons.subscriber.MaxAttempts,
-			},
+			cons.subscriber.toConsumerConfig(cons.name),
 		)
 		cancel()
 		if err != nil {
@@ -206,13 +200,4 @@ func (b *NatsBus) createStreamName(topic string) string {
 		"topic_%s",
 		strings.ReplaceAll(topic, ".", "_"),
 	)
-}
-
-func fillSubscriber(subscriber *EventSubscriber) {
-	const defaultMaxAttempts = 3
-
-	if subscriber.MaxAttempts == nil {
-		a := defaultMaxAttempts
-		subscriber.MaxAttempts = &a
-	}
 }

@@ -3,6 +3,8 @@ package natsbus
 import (
 	"context"
 	"time"
+
+	"github.com/nats-io/nats.go/jetstream"
 )
 
 type Bus interface {
@@ -31,4 +33,17 @@ type ConsumedEvent struct {
 
 type ProducedEvent struct {
 	ID string
+}
+
+func (s *EventSubscriber) toConsumerConfig(name string) jetstream.ConsumerConfig {
+	cfg := jetstream.ConsumerConfig{
+		Durable:       name,
+		DeliverPolicy: jetstream.DeliverLastPolicy,
+	}
+
+	if s.MaxAttempts != nil {
+		cfg.MaxDeliver = *s.MaxAttempts
+	}
+
+	return cfg
 }
