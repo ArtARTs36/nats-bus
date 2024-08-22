@@ -28,7 +28,7 @@ func (TestEvent) TopicName() string {
     return "users.created.v1"
 }
 
-func (TestEvent) CreateFromJSON([]byte) (Event, error) {
+func (TestEvent) CreateFromJSON(val []byte) (natsbus.Event, error) {
     var event TestEvent
     
     err := json.Unmarshal(val, &event)
