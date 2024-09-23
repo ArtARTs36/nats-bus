@@ -21,6 +21,19 @@ type NatsBus struct {
 
 	streams   map[string]*natsStream
 	consumers []*streamConsumer
+
+	callbacks Callbacks
+}
+
+type Callbacks struct {
+	Producer struct {
+		OnProduced func(ctx context.Context, event *ProducedEvent)
+	}
+	Consumer struct {
+		OnHandling func(ctx context.Context, event *ConsumedEvent)
+		OnSucceed  func(ctx context.Context, event *ConsumedEvent)
+		OnFailed   func(ctx context.Context, event *ConsumedEvent, err error)
+	}
 }
 
 type streamConsumer struct {
@@ -61,11 +74,15 @@ func (b *NatsBus) Publish(ctx context.Context, event Event) (*ProducedEvent, err
 	msg.Data = data
 
 	prEvent := &ProducedEvent{
-		ID: id,
+		ID:    id,
+		Event: event,
 	}
 
 	_, err = b.jetStream.PublishMsg(ctx, msg)
 	if err == nil {
+		prEvent.Timestamp = time.Now()
+		b.callbacks.Producer.OnProduced(ctx, prEvent)
+
 		return prEvent, nil
 	}
 
@@ -84,6 +101,9 @@ func (b *NatsBus) Publish(ctx context.Context, event Event) (*ProducedEvent, err
 		if twoErr != nil {
 			return nil, errors.Join(err, twoErr)
 		}
+
+		prEvent.Timestamp = time.Now()
+		b.callbacks.Producer.OnProduced(ctx, prEvent)
 
 		return prEvent, nil
 	}
@@ -200,4 +220,7 @@ func (b *NatsBus) createStreamName(topic string) string {
 		"topic_%s",
 		strings.ReplaceAll(topic, ".", "_"),
 	)
+}
+
+func noopConsumerCallback(_ context.Context, _ *ConsumedEvent) {
 }

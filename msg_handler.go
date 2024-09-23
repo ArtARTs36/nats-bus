@@ -12,6 +12,7 @@ type natsMessage struct {
 	id        string
 	msg       jetstream.Msg
 	timestamp time.Time
+	attempt   uint64
 }
 
 func (b *NatsBus) createMessageHandler(ctx context.Context, consumer *streamConsumer) jetstream.MessageHandler {
@@ -28,6 +29,7 @@ func (b *NatsBus) createMessageHandler(ctx context.Context, consumer *streamCons
 				WarnContext(ctx, "[nats-bus] failed to get metadata from message")
 		} else {
 			message.timestamp = md.Timestamp
+			message.attempt = md.NumDelivered
 		}
 
 		if message.id == "" {
@@ -57,11 +59,15 @@ func (b *NatsBus) createMessageHandler(ctx context.Context, consumer *streamCons
 			return
 		}
 
-		err = consumer.subscriber.Subscriber(&ConsumedEvent{
+		consEvent := &ConsumedEvent{
 			Event:     event,
 			ID:        message.id,
 			Timestamp: message.timestamp,
-		})
+		}
+
+		b.callbacks.Consumer.OnHandling(ctx, consEvent)
+
+		err = consumer.subscriber.Subscriber(ctx, consEvent)
 		if err != nil {
 			slog.
 				With(slog.String("err", err.Error())).
@@ -69,6 +75,9 @@ func (b *NatsBus) createMessageHandler(ctx context.Context, consumer *streamCons
 				WarnContext(ctx, "[nats-bus] failed to handle message")
 
 			nak(ctx, message)
+
+			b.callbacks.Consumer.OnFailed(ctx, consEvent, err)
+
 			return
 		}
 
@@ -78,5 +87,7 @@ func (b *NatsBus) createMessageHandler(ctx context.Context, consumer *streamCons
 			DebugContext(ctx, "[nats-bus] message successful handled")
 
 		ack(ctx, message)
+
+		b.callbacks.Consumer.OnSucceed(ctx, consEvent)
 	}
 }
