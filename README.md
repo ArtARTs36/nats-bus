@@ -1,6 +1,6 @@
 # nats-bus
 
-`nats-bus` - is a wrapper for NATS focussed on NATS JetStream.
+`nats-bus` - wrapper for NATS focussed on NATS JetStream.
 
 **Key points**:
 * Stream per topic(subject)
