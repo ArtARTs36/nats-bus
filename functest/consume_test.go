@@ -62,7 +62,7 @@ func TestBus_Consume(t *testing.T) {
 
 	bus.Subscribe(&natsbus.EventSubscriber{
 		Event: UserEvent{},
-		Subscriber: func(event *natsbus.ConsumedEvent) error {
+		Subscriber: func(_ context.Context, event *natsbus.ConsumedEvent) error {
 			consumedEvent = event
 
 			slog.

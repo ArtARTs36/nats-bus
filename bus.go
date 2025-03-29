@@ -133,7 +133,7 @@ func (b *NatsBus) Consume(ctx context.Context) error {
 		)
 		cancel()
 		if err != nil {
-			return fmt.Errorf("failed to create consumer for stream %q: %w", cons.name, err)
+			return fmt.Errorf("create consumer for stream %q: %w", cons.name, err)
 		}
 
 		cons.consumer = consumer
@@ -153,7 +153,8 @@ func (b *NatsBus) Consume(ctx context.Context) error {
 				wg.Done()
 
 				slog.
-					With(slog.String("err", err.Error())).
+					With(slog.Any("err", err)).
+					With(slog.String("topic_name", c.stream.topic)).
 					ErrorContext(ctx, "[nats-bus] failed to consume message")
 
 				return

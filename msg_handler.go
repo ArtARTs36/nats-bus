@@ -24,7 +24,7 @@ func (b *NatsBus) createMessageHandler(ctx context.Context, consumer *streamCons
 		md, err := msg.Metadata()
 		if err != nil {
 			slog.
-				With(slog.String("err", err.Error())).
+				With(slog.Any("err", err)).
 				WarnContext(ctx, "[nats-bus] failed to get metadata from message")
 		} else {
 			message.timestamp = md.Timestamp
@@ -42,14 +42,14 @@ func (b *NatsBus) createMessageHandler(ctx context.Context, consumer *streamCons
 		event, err := consumer.subscriber.Event.CreateFromJSON(msg.Data())
 		if err != nil {
 			slog.
-				With(slog.String("err", err.Error())).
+				With(slog.Any("err", err)).
 				With(slog.String("topic_name", message.msg.Subject())).
 				ErrorContext(ctx, "[nats-bus] failed to parse payload")
 
 			err = msg.Nak()
 			if err != nil {
 				slog.
-					With(slog.String("err", err.Error())).
+					With(slog.Any("err", err)).
 					With(slog.String("topic_name", message.msg.Subject())).
 					ErrorContext(ctx, "[nats-bus] failed to nack message")
 				return
@@ -57,13 +57,14 @@ func (b *NatsBus) createMessageHandler(ctx context.Context, consumer *streamCons
 			return
 		}
 
-		err = consumer.subscriber.Subscriber(&ConsumedEvent{
+		err = consumer.subscriber.Subscriber(ctx, &ConsumedEvent{
 			Event:     event,
 			ID:        message.id,
 			Timestamp: message.timestamp,
 		})
 		if err != nil {
 			slog.
+				With(slog.String("message_id", message.id)).
 				With(slog.String("err", err.Error())).
 				With(slog.String("topic_name", message.msg.Subject())).
 				WarnContext(ctx, "[nats-bus] failed to handle message")

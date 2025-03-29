@@ -12,7 +12,7 @@ func nak(ctx context.Context, msg *natsMessage) {
 	}
 
 	slog.
-		With(slog.String("err", err.Error())).
+		With(slog.Any("err", err)).
 		With(slog.String("message_id", msg.id)).
 		With(slog.String("topic_name", msg.msg.Subject())).
 		ErrorContext(ctx, "[nats-bus] failed to nak")
@@ -30,7 +30,7 @@ func ack(ctx context.Context, msg *natsMessage) {
 	}
 
 	slog.
-		With(slog.String("err", err.Error())).
+		With(slog.Any("err", err)).
 		With(slog.String("message_id", msg.id)).
 		With(slog.String("topic_name", msg.msg.Subject())).
 		ErrorContext(ctx, "[nats-bus] failed to ack")

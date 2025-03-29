@@ -21,7 +21,7 @@ type Event interface {
 
 type EventSubscriber struct {
 	Event       Event
-	Subscriber  func(event *ConsumedEvent) error
+	Subscriber  func(ctx context.Context, event *ConsumedEvent) error
 	MaxAttempts *int
 }
 
