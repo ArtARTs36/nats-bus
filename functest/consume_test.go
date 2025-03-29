@@ -55,26 +55,22 @@ func TestBus_Consume(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, bus)
 
-	var consumedEvent *natsbus.ConsumedEvent
+	var consumedEvent *UserEvent
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	bus.Subscribe(&natsbus.EventSubscriber{
-		Event: UserEvent{},
-		Subscriber: func(_ context.Context, event *natsbus.ConsumedEvent) error {
-			consumedEvent = event
+	bus.Subscribe(natsbus.On(func(ctx context.Context, event *UserEvent) error {
+		consumedEvent = event
 
-			slog.
-				With(slog.String("timestamp", event.Timestamp.Format(time.DateTime))).
-				With(slog.String("id", event.ID)).
-				Debug("consumed test event")
+		slog.
+			With(slog.Any("event", event)).
+			Debug("consumed test event")
 
-			cancel()
+		cancel()
 
-			return nil
-		},
-	})
+		return nil
+	}))
 
 	_, err = bus.Publish(ctx, &UserEvent{
 		FirstName: "ab",
@@ -90,5 +86,5 @@ func TestBus_Consume(t *testing.T) {
 	assert.Equal(t, &UserEvent{
 		FirstName: "ab",
 		LastName:  "cd",
-	}, consumedEvent.Event)
+	}, consumedEvent)
 }

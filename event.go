@@ -2,6 +2,7 @@ package natsbus
 
 import (
 	"context"
+	"reflect"
 	"time"
 
 	"github.com/nats-io/nats.go/jetstream"
@@ -46,4 +47,26 @@ func (s *EventSubscriber) toConsumerConfig(name string) jetstream.ConsumerConfig
 	}
 
 	return cfg
+}
+
+func On[E Event](
+	subscriber func(ctx context.Context, event E) error,
+) *EventSubscriber {
+	return &EventSubscriber{
+		Event: func() Event {
+			var eventInstance E
+
+			value := reflect.ValueOf(eventInstance)
+			if value.Type().Kind() == reflect.Ptr {
+				v := reflect.New(reflect.TypeOf(eventInstance).Elem())
+
+				return v.Interface().(Event)
+			}
+
+			return eventInstance
+		}(),
+		Subscriber: func(ctx context.Context, event *ConsumedEvent) error {
+			return subscriber(ctx, event.Event.(E))
+		},
+	}
 }
