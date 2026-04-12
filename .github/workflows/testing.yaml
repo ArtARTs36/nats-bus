@@ -54,10 +54,10 @@ jobs:
         run: go mod download
 
       - name: Run NATS
-        run: docker-compose up -d nats1 nats2 nats3
+        run: docker compose up -d nats1 nats2 nats3
 
       - name: Run tests
-        run: docker-compose run --rm nats-bus-functests
+        run: docker compose run --rm nats-bus-functests
 
       - name: Cleanup NATS
         if: ${{always()}}
