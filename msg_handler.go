@@ -39,7 +39,7 @@ func (b *NatsBus) createMessageHandler(ctx context.Context, consumer *streamCons
 			With(slog.String("topic_name", message.msg.Subject())).
 			DebugContext(ctx, "[nats-bus] handling message")
 
-		event, err := consumer.subscriber.Event.CreateFromJSON(msg.Data())
+		event, err := b.serializer.Deserialize(msg.Data(), consumer.subscriber.Event)
 		if err != nil {
 			slog.
 				With(slog.Any("err", err)).

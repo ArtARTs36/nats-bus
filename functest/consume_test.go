@@ -2,7 +2,6 @@ package functest
 
 import (
 	"context"
-	"encoding/json"
 	"log/slog"
 	"os"
 	"strings"
@@ -20,16 +19,11 @@ type UserEvent struct {
 	LastName  string `json:"last_name"`
 }
 
-func (e UserEvent) TopicName() string {
-	return "users.v1"
-}
-
-func (e UserEvent) CreateFromJSON(data []byte) (natsbus.Event, error) {
-	var event UserEvent
-
-	err := json.Unmarshal(data, &event)
-
-	return &event, err
+func (e *UserEvent) TopicMeta() natsbus.TopicMeta {
+	return natsbus.TopicMeta{
+		TopicName:         "users.v1",
+		SerializationType: natsbus.SerializationJSON,
+	}
 }
 
 func TestBus_Consume(t *testing.T) {
@@ -37,7 +31,7 @@ func TestBus_Consume(t *testing.T) {
 
 	natsURLs := []string{"nats1:4222", "nats2:4222", "nats3:4222"}
 	if os.Getenv("TEST_NATS_URLS") != "" {
-		natsURLs = strings.Split(os.Getenv("TEST_NATS_URLS"), "")
+		natsURLs = strings.Split(os.Getenv("TEST_NATS_URLS"), ",")
 	}
 
 	bus, err := natsbus.Connect(&natsbus.Config{
@@ -46,21 +40,20 @@ func TestBus_Consume(t *testing.T) {
 		AutoCreateStreamPublish: true,
 		CreateStreamTimeout:     10 * time.Second,
 		CreateConsumerTimeout:   10 * time.Second,
-	})
-	defer func() {
-		err := bus.Close()
-		require.NoError(t, err)
-	}()
-
+	}, natsbus.NewJSONSerializer())
 	require.NoError(t, err)
 	require.NotNil(t, bus)
+
+	defer func() {
+		require.NoError(t, bus.Close())
+	}()
 
 	var consumedEvent *UserEvent
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	bus.Subscribe(natsbus.On(func(ctx context.Context, event *UserEvent) error {
+	bus.Subscribe(natsbus.On(func(_ context.Context, event *UserEvent) error {
 		consumedEvent = event
 
 		slog.

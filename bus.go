@@ -2,7 +2,6 @@ package natsbus
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -15,9 +14,10 @@ import (
 )
 
 type NatsBus struct {
-	cfg       *Config
-	conn      *oNats.Conn
-	jetStream jetstream.JetStream
+	cfg        *Config
+	serializer Serializer
+	conn       *oNats.Conn
+	jetStream  jetstream.JetStream
 
 	streams   map[string]*natsStream
 	consumers []*streamConsumer
@@ -49,14 +49,14 @@ type Config struct {
 }
 
 func (b *NatsBus) Publish(ctx context.Context, event Event) (*ProducedEvent, error) {
-	data, err := json.Marshal(event)
+	data, err := b.serializer.Serialize(event)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal Event to json: %w", err)
+		return nil, fmt.Errorf("serialize event: %w", err)
 	}
 
 	id := generateMessageID()
 
-	msg := oNats.NewMsg(event.TopicName())
+	msg := oNats.NewMsg(event.TopicMeta().TopicName)
 	msg.Header.Set(messageHeaderMessageID, id)
 	msg.Data = data
 
@@ -73,7 +73,7 @@ func (b *NatsBus) Publish(ctx context.Context, event Event) (*ProducedEvent, err
 		return nil, err
 	}
 
-	st := b.retrieveStream(event.TopicName())
+	st := b.retrieveStream(event.TopicMeta().TopicName)
 	if st.stream == nil {
 		twoErr := b.persistStream(ctx, st)
 		if twoErr != nil {
@@ -92,7 +92,7 @@ func (b *NatsBus) Publish(ctx context.Context, event Event) (*ProducedEvent, err
 }
 
 func (b *NatsBus) Subscribe(subscriber *EventSubscriber) {
-	st := b.retrieveStream(subscriber.Event.TopicName())
+	st := b.retrieveStream(subscriber.Event.TopicMeta().TopicName)
 
 	b.consumers = append(b.consumers, &streamConsumer{
 		name:       b.createConsumerName(st.name),
@@ -166,20 +166,15 @@ func (b *NatsBus) Consume(ctx context.Context) error {
 
 			c.consumerContext = consCtx
 
-			for { //nolint:gosimple // not need
-				select {
-				case <-ctx.Done():
-					wg.Done()
+			<-ctx.Done()
 
-					slog.
-						With(slog.String("topic_name", c.stream.topic)).
-						InfoContext(ctx, "[nats-bus] stopping consumer")
+			wg.Done()
 
-					c.consumerContext.Stop()
+			slog.
+				With(slog.String("topic_name", c.stream.topic)).
+				InfoContext(ctx, "[nats-bus] stopping consumer")
 
-					return
-				}
-			}
+			c.consumerContext.Stop()
 		}()
 	}
 

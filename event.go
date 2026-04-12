@@ -2,6 +2,7 @@ package natsbus
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"time"
 
@@ -16,8 +17,7 @@ type Bus interface {
 }
 
 type Event interface {
-	TopicName() string
-	CreateFromJSON([]byte) (Event, error)
+	TopicMeta() TopicMeta
 }
 
 type EventSubscriber struct {
@@ -60,13 +60,25 @@ func On[E Event](
 			if value.Type().Kind() == reflect.Ptr {
 				v := reflect.New(reflect.TypeOf(eventInstance).Elem())
 
-				return v.Interface().(Event)
+				ev, ok := v.Interface().(Event)
+				if !ok {
+					var zero E
+
+					return zero
+				}
+
+				return ev
 			}
 
 			return eventInstance
 		}(),
 		Subscriber: func(ctx context.Context, event *ConsumedEvent) error {
-			return subscriber(ctx, event.Event.(E))
+			e, ok := event.Event.(E)
+			if !ok {
+				return fmt.Errorf("natsbus: event type mismatch: got %T", event.Event)
+			}
+
+			return subscriber(ctx, e)
 		},
 	}
 }

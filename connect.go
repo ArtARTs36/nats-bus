@@ -8,7 +8,11 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 )
 
-func Connect(natsCfg *Config) (*NatsBus, error) {
+func Connect(natsCfg *Config, serializer Serializer) (*NatsBus, error) {
+	if serializer == nil {
+		return nil, fmt.Errorf("serializer is required")
+	}
+
 	conn, err := connect(natsCfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to nats: %w", err)
@@ -20,11 +24,12 @@ func Connect(natsCfg *Config) (*NatsBus, error) {
 	}
 
 	return &NatsBus{
-		cfg:       natsCfg,
-		conn:      conn,
-		jetStream: js,
-		streams:   map[string]*natsStream{},
-		consumers: []*streamConsumer{},
+		cfg:        natsCfg,
+		serializer: serializer,
+		conn:       conn,
+		jetStream:  js,
+		streams:    map[string]*natsStream{},
+		consumers:  []*streamConsumer{},
 	}, nil
 }
 
