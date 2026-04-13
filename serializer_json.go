@@ -65,7 +65,7 @@ func jsonDecodeTarget(prototype Event) (reflect.Value, error) {
 
 	t := pv.Type()
 
-	switch t.Kind() {
+	switch t.Kind() { //nolint:exhaustive // not need
 	case reflect.Ptr:
 		if t.Elem().Kind() != reflect.Struct {
 			return reflect.Value{}, fmt.Errorf("natsbus: JSON event prototype must be pointer to struct")

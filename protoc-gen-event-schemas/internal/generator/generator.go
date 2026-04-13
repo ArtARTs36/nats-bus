@@ -186,7 +186,7 @@ func parseEventOptions(rawOptions []byte) (eventOptions, error) {
 		}
 		rawOptions = rawOptions[consumedTag:]
 
-		switch fieldNumber {
+		switch fieldNumber { //nolint:exhaustive // not need
 		case topicNameOptionNumber, serializationTypeOptionNumber:
 			if wireType != protowire.BytesType {
 				return eventOptions{}, fmt.Errorf(
