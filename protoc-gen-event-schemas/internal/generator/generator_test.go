@@ -7,6 +7,50 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
+func TestSerializationTypeConstantGoName(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		input string
+		want  string
+	}{
+		{
+			name:  "json",
+			input: "json",
+			want:  "SerializationJSON",
+		},
+		{
+			name:  "proto",
+			input: "proto",
+			want:  "SerializationProto",
+		},
+		{
+			name:  "protobuf alias",
+			input: "protobuf",
+			want:  "SerializationProto",
+		},
+		{
+			name:  "unknown",
+			input: "custom",
+			want:  "",
+		},
+	}
+
+	for _, testCase := range tests {
+		tc := testCase
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := serializationTypeConstantGoName(tc.input)
+			if got != tc.want {
+				t.Fatalf("unexpected constant name: got %q want %q", got, tc.want)
+			}
+		})
+	}
+}
+
 func TestParseEventOptions(t *testing.T) {
 	raw := make([]byte, 0)
 	raw = protowire.AppendTag(raw, topicNameOptionNumber, protowire.BytesType)

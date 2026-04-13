@@ -9,7 +9,7 @@
 * Automatically consumer name generating `{serviceName}_{streamName}_consumer`
 * Automatically stream creating on consuming
 * Automatically stream creating on producing
-* Pluggable `Serializer`: implement the interface, or use `NewFuncSerializer` with callbacks; `ComposeWithJSON` / `NewComposeSerializer` route by `SerializationType`
+* Pluggable `Serializer`: built-in `NewJSONSerializer` and `NewProtoSerializer`, or custom via `NewFuncSerializer`; `ComposeWithJSON` / `NewComposeSerializer` route by `SerializationType`
 
 ## Install
 
@@ -27,7 +27,7 @@ type TestEvent struct {
 
 func (e *TestEvent) TopicMeta() natsbus.TopicMeta {
 	return natsbus.TopicMeta{
-		TopicName:           "users.created.v1",
+		TopicName:         "users.created.v1",
 		SerializationType: natsbus.SerializationJSON,
 	}
 }

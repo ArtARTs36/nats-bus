@@ -31,6 +31,11 @@ message UserRegistered {
 }
 ```
 
+Known serialization values mapped to nats-bus constants:
+
+1. `json` -> `natsbus.SerializationJSON`
+2. `proto` / `protobuf` -> `natsbus.SerializationProto`
+
 If `nats_bus.events.topic_name` or `nats_bus.events.serialization_type` is missing for a message, plugin generation fails with an error.
 
 ## Build plugin

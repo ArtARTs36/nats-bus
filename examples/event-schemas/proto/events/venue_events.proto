@@ -22,7 +22,7 @@ message VenueCreated {
 // Event about venue verification by moderator.
 message VenueVerified {
   option (nats_bus.events.topic_name) = "venues.verified";
-  option (nats_bus.events.serialization_type) = "json";
+  option (nats_bus.events.serialization_type) = "proto";
 
   // Venue identifier.
   string id = 1;

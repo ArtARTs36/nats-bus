@@ -366,10 +366,10 @@ func generateTopicMetaMethod(generatedFile *protogen.GeneratedFile, event eventM
 }
 
 func serializationTypeExpression(generatedFile *protogen.GeneratedFile, value string) string {
-	if strings.EqualFold(value, "json") {
+	if serializationTypeConstGoName := serializationTypeConstantGoName(value); serializationTypeConstGoName != "" {
 		return generatedFile.QualifiedGoIdent(protogen.GoIdent{
 			GoImportPath: natsBusImportPath,
-			GoName:       "SerializationJSON",
+			GoName:       serializationTypeConstGoName,
 		})
 	}
 
@@ -377,6 +377,19 @@ func serializationTypeExpression(generatedFile *protogen.GeneratedFile, value st
 		GoImportPath: natsBusImportPath,
 		GoName:       "SerializationType",
 	}) + "(" + strconv.Quote(value) + ")"
+}
+
+func serializationTypeConstantGoName(value string) string {
+	normalized := strings.TrimSpace(value)
+
+	switch {
+	case strings.EqualFold(normalized, "json"):
+		return "SerializationJSON"
+	case strings.EqualFold(normalized, "proto"), strings.EqualFold(normalized, "protobuf"):
+		return "SerializationProto"
+	default:
+		return ""
+	}
 }
 
 func sanitizeGoComment(text string) string {
