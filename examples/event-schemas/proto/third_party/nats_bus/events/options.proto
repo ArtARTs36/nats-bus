@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package nats_bus.events;
+
+import "google/protobuf/descriptor.proto";
+
+option go_package = "github.com/artarts36/nats-bus/protoc-gen-event-schemas/proto/nats_bus/events;eventspb";
+
+extend google.protobuf.MessageOptions {
+  string topic_name = 50001;
+  string serialization_type = 50002;
+}

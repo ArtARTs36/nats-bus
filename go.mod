@@ -1,11 +1,12 @@
 module github.com/artarts36/nats-bus
 
-go 1.21.0
+go 1.23
 
 require (
 	github.com/google/uuid v1.6.0
 	github.com/nats-io/nats.go v1.34.1
 	github.com/stretchr/testify v1.9.0
+	google.golang.org/protobuf v1.36.11
 )
 
 require (

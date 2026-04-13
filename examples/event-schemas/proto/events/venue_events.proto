@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package events.catalog.v1;
+
+option go_package = "github.com/artarts36/nats-bus/examples/event-schemas/proto/events;catalogeventsv1";
+
+import "nats_bus/events/options.proto";
+
+// Event about venue creation.
+message VenueCreated {
+  option (nats_bus.events.topic_name) = "venues.created";
+  option (nats_bus.events.serialization_type) = "json";
+
+  // Venue identifier.
+  string id = 1;
+  // Venue name.
+  string name = 2;
+  // Venue city.
+  string city = 3;
+}
+
+// Event about venue verification by moderator.
+message VenueVerified {
+  option (nats_bus.events.topic_name) = "venues.verified";
+  option (nats_bus.events.serialization_type) = "json";
+
+  // Venue identifier.
+  string id = 1;
+  // Moderator identifier.
+  string moderator_id = 2;
+}
