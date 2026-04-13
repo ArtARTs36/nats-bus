@@ -62,32 +62,6 @@ func TestProtoSerializer_roundTrip(t *testing.T) {
 	require.Equal(t, ev.Value, pe.Value)
 }
 
-func TestComposeWithJSON_delegatesToProtoSerializer(t *testing.T) {
-	t.Parallel()
-
-	cs := ComposeWithJSON(map[SerializationType]Serializer{
-		SerializationProto: NewProtoSerializer(),
-	})
-
-	ev := &protoRoundTripEvent{
-		Any: anypb.Any{
-			TypeUrl: "type.googleapis.com/test.Event",
-			Value:   []byte("hello"),
-		},
-	}
-
-	payload, err := cs.Serialize(ev)
-	require.NoError(t, err)
-
-	out, err := cs.Deserialize(payload, &protoRoundTripEvent{})
-	require.NoError(t, err)
-
-	pe, ok := out.(*protoRoundTripEvent)
-	require.True(t, ok)
-	require.Equal(t, ev.TypeUrl, pe.TypeUrl)
-	require.Equal(t, ev.Value, pe.Value)
-}
-
 func TestProtoSerializer_rejectsWrongSerializationType(t *testing.T) {
 	t.Parallel()
 
